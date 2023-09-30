@@ -1,10 +1,5 @@
 from typing import Iterable
 
-PROT_SET_1 = frozenset('ARNDCEQGHILKMFPSTWYV')
-PROT_SET_3 = frozenset({'Ala','Arg', 'Asn', 'Asp', 'Cys',
-                        'Gln', 'Glu', 'Gly', 'His', 'Ile',
-                        'Leu', 'Lys', 'Met', 'Phe', 'Pro',
-                        'Ser', 'Thr', 'Trp', 'Tyr', 'Val'})
 AA_TR_DICT = {'Ala': 'A', 'Arg': 'R', 'Asn': 'N', 'Asp': 'D',
               'Cys': 'C', 'Gln': 'E', 'Glu': 'Q', 'Gly': 'G',
               'His': 'H', 'Ile': 'I', 'Leu': 'L', 'Lys': 'K',
@@ -59,14 +54,15 @@ def Mann_Whitney_U(seq1: Iterable[int], seq2: Iterable[int]) -> bool:
     return True
 
 
-def decomposition(seq):
+def decomposition(seq: str) -> list:
     len_seq, dec_seq = len(seq), []
-    for i in range(0, len_seq, 3):
-        dec_seq.append(seq[i:i+3].lower().capitalize())
+    if len(seq) % 3 == 0:
+        for i in range(0, len_seq, 3):
+            dec_seq.append(seq[i:i+3].lower().capitalize())
     return dec_seq
 
 
-def seq_transform(seq: list):
+def seq_transform(seq: list) -> str:
     seq_tr = ''
     for aa in seq:
         seq_tr += AA_TR_DICT[aa]
@@ -80,12 +76,12 @@ def check_seq(seq: Iterable, abbreviation: int = 1) -> bool:
     """
     if abbreviation == 3:
         seq = decomposition(seq)
-        exit_code = set(seq).issubset(PROT_SET_3)
+        exit_code = bool(seq) and set(seq).issubset(set(AA_TR_DICT.keys()))
         if exit_code:
             seq = seq_transform(seq)
     elif abbreviation == 1:
         seq_set = set(seq.upper())
-        exit_code = seq_set.issubset(PROT_SET_1)
+        exit_code = seq_set.issubset(set(AA_TR_DICT.values()))
         if exit_code:
             seq_content, uniprot_content = aa_content_check(seq).values(), AA_UNIPROT_CONTENT.values()
             seq_Mann_Whitney_U = Mann_Whitney_U(seq_content, uniprot_content) if len(seq_set) == 20 else True
@@ -125,9 +121,9 @@ def run_protein_analyzer_tool(*args, abbreviation: int = 1):
 
     result, corrupt_seqs = [], []
     for seq_index, seq in enumerate(seqs):
-        is_seq_valid, seq = check_seq(seq, abbreviation)
+        is_seq_valid, seq_alt = check_seq(seq, abbreviation)
         if is_seq_valid:
-            result.append(OPERATIONS[operation](seq))
+            result.append(OPERATIONS[operation](seq_alt))
         elif not is_seq_valid:
             corrupt_seqs.append((seq_index, seq))
 
