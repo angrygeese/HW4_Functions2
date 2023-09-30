@@ -66,12 +66,23 @@ def decomposition(seq):
     return dec_seq
 
 
-def check_seq(seq: str, abbreviation: int = 1) -> bool:
+def seq_transform(seq: list):
+    seq_tr = ''
+    for aa in seq:
+        seq_tr += AA_TR_DICT[aa]
+    
+    return seq_tr
+
+
+def check_seq(seq: Iterable, abbreviation: int = 1) -> bool:
     """
     Checks whether the string is protein.                                                                               
     """
     if abbreviation == 3:
+        seq = decomposition(seq)
         exit_code = set(seq).issubset(PROT_SET_3)
+        if exit_code:
+            seq = seq_transform(seq)
     elif abbreviation == 1:
         seq_set = set(seq.upper())
         exit_code = seq_set.issubset(PROT_SET_1)
@@ -80,15 +91,7 @@ def check_seq(seq: str, abbreviation: int = 1) -> bool:
             seq_Mann_Whitney_U = Mann_Whitney_U(seq_content, uniprot_content) if len(seq_set) == 20 else True
             exit_code = seq_Mann_Whitney_U
     
-    return exit_code
-
-
-def seq_transform(seq: list):
-    seq_tr = ''
-    for aa in seq:
-        seq_tr += AA_TR_DICT[aa]
-    
-    return seq_tr
+    return exit_code, seq
 
 
 def seq_length(seq: str) -> int:
@@ -122,12 +125,8 @@ def run_protein_analyzer_tool(*args, abbreviation: int = 1):
 
     result, corrupt_seqs = [], []
     for seq_index, seq in enumerate(seqs):
-        if abbreviation == 3:
-            seq = decomposition(seq)
-        is_seq_valid = check_seq(seq, abbreviation)
+        is_seq_valid, seq = check_seq(seq, abbreviation)
         if is_seq_valid:
-            if abbreviation == 3:
-                seq = seq_transform(seq)
             result.append(OPERATIONS[operation](seq))
         elif not is_seq_valid:
             corrupt_seqs.append((seq_index, seq))
