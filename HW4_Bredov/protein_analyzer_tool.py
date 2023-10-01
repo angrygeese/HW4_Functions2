@@ -272,6 +272,31 @@ def protein_formula(seq: str):
         aa_formula = f'С: {fС}, H: {fH}, N: {fN}, O:{fO}, S: {fS}'
     return aa_formula
 
+def aa_chain_charge(seq: str, aa_charges: dict = AA_CHARGES) -> dict:
+    "Returns charge of the protein (pH=7)"
+    aa_charge = 0
+    for AAcd in seq.upper():
+        aa_charge += aa_charges[AAcd]
+
+    return aa_charge
+
+def aa_content_check(seq: str) -> dict:
+    "Returns aminoacids content of the protein"
+    seq_content = dict.fromkeys(AA_UNIPROT_CONTENT.keys(), 0)
+    for AAcd in seq.upper():
+        seq_content[AAcd] = seq_content[AAcd] + 1
+
+    seq_length = len(seq)
+    for AAcd, occurence in seq_content.items():
+        seq_content[AAcd] = 100 * occurence / seq_length
+
+    return seq_content
+
+
+
+
+
+
 def print_result(result: list, corrupt_seqs: list):
     len_seq, len_corr_seq = len(result), len(corrupt_seqs)
     len_seqs = len_seq + len_corr_seq
