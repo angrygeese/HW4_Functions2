@@ -294,7 +294,7 @@ def protein_formula(seq: str) -> dict:
     return aa_formula
 
 
-def aa_chain_charge(seq: str, aa_charges: dict = AA_CHARGES) -> dict:
+def aa_chain_charge(seq: str, aa_charges: dict = AA_CHARGES) -> int:
     "Returns charge of the protein (pH=7)"
     aa_charge = 0
     for AAcd in seq.upper():
