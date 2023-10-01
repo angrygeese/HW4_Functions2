@@ -80,19 +80,22 @@ def seq_transform(seq: list) -> str:
 
 def check_and_procees_seq(seq: str, abbreviation: int = 1) -> Tuple[bool, str]:
     "Checks whether the string is valid protein sequence and transforms to 1-letter abbreviation if required"
-    not_empty = bool(seq)
-    if abbreviation == 3:
-        seq = decomposition(seq)
-        exit_code = not_empty and set(seq).issubset(set(AA_TR_DICT.keys()))
-        if exit_code:
-            seq = seq_transform(seq)
-    elif abbreviation == 1:
-        seq_set = set(seq.upper())
-        exit_code = not_empty and seq_set.issubset(set(AA_TR_DICT.values()))
-        if exit_code:
-            seq_content, uniprot_content = aa_content_check(seq).values(), AA_UNIPROT_CONTENT.values()
-            seq_Mann_Whitney_U = Mann_Whitney_U(seq_content, uniprot_content) if len(seq_set) == 20 else True
-            exit_code = seq_Mann_Whitney_U
+    exit_code = False
+    if isinstance(seq, str):
+        if abbreviation == 3:
+            seq = decomposition(seq)
+            exit_code = bool(seq) and set(seq).issubset(set(AA_TR_DICT.keys()))
+            if exit_code:
+                seq = seq_transform(seq)
+        elif abbreviation == 1:
+            seq_set = set(seq.upper())
+            exit_code = bool(seq) and seq_set.issubset(set(AA_TR_DICT.values()))
+            if exit_code:
+                seq_content, uniprot_content = aa_content_check(seq).values(), AA_UNIPROT_CONTENT.values()
+                seq_Mann_Whitney_U = Mann_Whitney_U(seq_content, uniprot_content) if len(seq_set) == 20 else True
+                exit_code = seq_Mann_Whitney_U
+        else:
+            raise ValueError("Incorrect abbreviation. Must be 1 or 3, type `int")
     
     return exit_code, seq
 
@@ -144,7 +147,7 @@ def protein_mass(seq: str):
             count += 133
     return count
 
-def protein_formula(seq: str):
+def protein_formula(seq: str) -> dict:
     "Returns molecular formula of the protein"
     fС = 0
     fH = 0
@@ -267,10 +270,11 @@ def protein_formula(seq: str):
             fO += 4
             fS += 0
     if fS == 0:
-        aa_formula = f'С: {fС}, H: {fH}, N: {fN}, O:{fO}'
+        aa_formula = {"С": fС, "H": fH, "N": fN, "O":fO}
     else:
-        aa_formula = f'С: {fС}, H: {fH}, N: {fN}, O:{fO}, S: {fS}'
+        aa_formula = {"С": fС, "H": fH, "N": fN, "O":fO, "S": fS}
     return aa_formula
+
 
 def print_result(result: list, corrupt_seqs: list):
     len_seq, len_corr_seq = len(result), len(corrupt_seqs)
