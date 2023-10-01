@@ -51,6 +51,7 @@ def Mann_Whitney_U(seq1: Iterable[int], seq2: Iterable[int]) -> bool:
 
     if u_stat <= 127:
         return False
+    
     return True
 
 
@@ -63,6 +64,7 @@ def decomposition(seq: str) -> list:
     if len(seq) % 3 == 0:
         for i in range(0, len_seq, 3):
             dec_seq.append(seq[i:i+3].lower().capitalize())
+    
     return dec_seq
 
 
@@ -76,29 +78,47 @@ def seq_transform(seq: list) -> str:
         seq_tr += AA_TR_DICT[aa]
     
     return seq_tr
+  
+  
+
+def aa_content_check(seq: str) -> dict:
+    "Returns aminoacids content of the protein"
+    seq_content = dict.fromkeys(AA_UNIPROT_CONTENT.keys(), 0)
+    for AAcd in seq.upper():
+        seq_content[AAcd] = seq_content[AAcd] + 1
+
+    seq_length = len(seq)
+    for AAcd, occurence in seq_content.items():
+        seq_content[AAcd] = 100 * occurence / seq_length
+
+    return seq_content
 
 
 def check_and_procees_seq(seq: str, abbreviation: int = 1) -> Tuple[bool, str]:
     "Checks whether the string is valid protein sequence and transforms to 1-letter abbreviation if required"
-    not_empty = bool(seq)
-    if abbreviation == 3:
-        seq = decomposition(seq)
-        exit_code = not_empty and set(seq).issubset(set(AA_TR_DICT.keys()))
-        if exit_code:
-            seq = seq_transform(seq)
-    elif abbreviation == 1:
-        seq_set = set(seq.upper())
-        exit_code = not_empty and seq_set.issubset(set(AA_TR_DICT.values()))
-        if exit_code:
-            seq_content, uniprot_content = aa_content_check(seq).values(), AA_UNIPROT_CONTENT.values()
-            seq_Mann_Whitney_U = Mann_Whitney_U(seq_content, uniprot_content) if len(seq_set) == 20 else True
-            exit_code = seq_Mann_Whitney_U
+    exit_code = False
+    if isinstance(seq, str):
+        if abbreviation == 3:
+            seq = decomposition(seq)
+            exit_code = bool(seq) and set(seq).issubset(set(AA_TR_DICT.keys()))
+            if exit_code:
+                seq = seq_transform(seq)
+        elif abbreviation == 1:
+            seq_set = set(seq.upper())
+            exit_code = bool(seq) and seq_set.issubset(set(AA_TR_DICT.values()))
+            if exit_code:
+                seq_content, uniprot_content = aa_content_check(seq).values(), AA_UNIPROT_CONTENT.values()
+                seq_Mann_Whitney_U = Mann_Whitney_U(seq_content, uniprot_content) if len(seq_set) == 20 else True
+                exit_code = seq_Mann_Whitney_U
+        else:
+            raise ValueError("Incorrect abbreviation. Must be 1 or 3, type `int`")
     
     return exit_code, seq
 
 
 def seq_length(seq: str) -> int:
     return len(seq)
+
 
 def protein_mass(seq: str):
     "Counts molecular weight of the protein"
@@ -144,7 +164,8 @@ def protein_mass(seq: str):
             count += 133
     return count
 
-def protein_formula(seq: str):
+
+def protein_formula(seq: str) -> dict:
     "Returns molecular formula of the protein"
     fС = 0
     fH = 0
@@ -267,10 +288,11 @@ def protein_formula(seq: str):
             fO += 4
             fS += 0
     if fS == 0:
-        aa_formula = f'С: {fС}, H: {fH}, N: {fN}, O:{fO}'
+        aa_formula = {"С": fС, "H": fH, "N": fN, "O":fO}
     else:
-        aa_formula = f'С: {fС}, H: {fH}, N: {fN}, O:{fO}, S: {fS}'
+        aa_formula = {"С": fС, "H": fH, "N": fN, "O":fO, "S": fS}
     return aa_formula
+
 
 def aa_chain_charge(seq: str, aa_charges: dict = AA_CHARGES) -> dict:
     "Returns charge of the protein (pH=7)"
@@ -279,23 +301,7 @@ def aa_chain_charge(seq: str, aa_charges: dict = AA_CHARGES) -> dict:
         aa_charge += aa_charges[AAcd]
 
     return aa_charge
-
-def aa_content_check(seq: str) -> dict:
-    "Returns aminoacids content of the protein"
-    seq_content = dict.fromkeys(AA_UNIPROT_CONTENT.keys(), 0)
-    for AAcd in seq.upper():
-        seq_content[AAcd] = seq_content[AAcd] + 1
-
-    seq_length = len(seq)
-    for AAcd, occurence in seq_content.items():
-        seq_content[AAcd] = 100 * occurence / seq_length
-
-    return seq_content
-
-
-
-
-
+  
 
 def print_result(result: list, corrupt_seqs: list):
     len_seq, len_corr_seq = len(result), len(corrupt_seqs)
@@ -314,7 +320,7 @@ def print_result(result: list, corrupt_seqs: list):
 OPERATIONS = {"content_check": aa_content_check, "seq_length": seq_length, "protein_formula": protein_formula, "protein_mass": protein_mass, "charge": aa_chain_charge}
 
 
-def run_protein_analyzer_tool(*args, abbreviation: int = 1):
+def run_protein_analyzer_tool(*args, abbreviation: int = 1) -> Tuple[list, list]:
     """
     Docstring
     """
