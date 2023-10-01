@@ -322,7 +322,16 @@ OPERATIONS = {"content_check": aa_content_check, "seq_length": seq_length, "prot
 
 def run_protein_analyzer_tool(*args, abbreviation: int = 1) -> Tuple[list, list]:
     """
-    Docstring
+    Provides interface for 5 operations from `OPERATIONS` dictionary. Takes various number of positional arguments and one keyword-only argument:
+    
+    - First `n` arguments - protein sequences;
+    - Latter positional argument - desired operation from list: "content_check", "seq_length", "protein_formula", "protein_mass", "charge";
+    - `abbrevition` keyword-only argument. Should be type integer, 1 for 1-letter abbreviation and 3 for 3-letter.
+    
+    Returns tuple containing two list:
+
+    - `result` - list with operation results for each valid sequence;
+    - `corrupt_seqs` - list with non-valid sequences and their indices;
     """
     *seqs, operation = args
     if operation not in OPERATIONS:
