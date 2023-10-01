@@ -10,6 +10,8 @@ This module contains the `protein_analyzer_tool.py` function that performs 5 bas
 ## Overview
 - `protein_mass` - returns molecular weight of protein in g/mol. The function takes string and returns integer.
 - `protein_formula` - returns the molecular formula of protein. The function takes string and returns dictionary with data of the protein atomic composition. The output contains the number of C, H, N, O, and S (optionally) atoms in sequence.
+- `aa_chain_charge` - returns charge of the protein (pH=7). The function accepts input data in the str format and returns data in number.
+- `aa_content_check` - returns aminoacid content of the protein in fractions. The function accepts input data in the str format and returns data of the protein aminoacid composition in the dict format. The output of the function contains the fraction of each aminoacid in sequence.   
 ## Usage
 
 To run the `protein_analyzer_tool.py`, first import it as module
