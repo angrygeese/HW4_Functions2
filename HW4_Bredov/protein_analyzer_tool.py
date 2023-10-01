@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Tuple
 
 AA_TR_DICT = {'Ala': 'A', 'Arg': 'R', 'Asn': 'N', 'Asp': 'D',
               'Cys': 'C', 'Gln': 'E', 'Glu': 'Q', 'Gly': 'G',
@@ -21,8 +21,8 @@ AA_CHARGES = {
 
 def Mann_Whitney_U(seq1: Iterable[int], seq2: Iterable[int]) -> bool:
     """
-    Mann-Whitney U-test. Used to compare aminoacids composition in sequence with average composition provided by Uniprot.
-    Used as a second step in `check_seq` function if sequence is 1-letter abbreviation.
+    Mann-Whitney U-test. Used to compare aminoacids composition in given sequence with average protein composition provided by Uniprot.
+    Used as a second step of checkup in `check_and_procees_seq` function if sequence uses 1-letter abbreviation.
     """
     len_seq1, len_seq2 = len(seq1), len(seq2)
     r1, r2 = dict.fromkeys(map(str, seq1), 0), dict.fromkeys(map(str, seq2), 0)
@@ -55,6 +55,10 @@ def Mann_Whitney_U(seq1: Iterable[int], seq2: Iterable[int]) -> bool:
 
 
 def decomposition(seq: str) -> list:
+    """
+    Decomposes 3 letter-sequence into list of single aminoacids.
+    Used in `check_and_procees_seq` function if sequence uses 3-letter abbreviation.
+    """
     len_seq, dec_seq = len(seq), []
     if len(seq) % 3 == 0:
         for i in range(0, len_seq, 3):
@@ -63,6 +67,10 @@ def decomposition(seq: str) -> list:
 
 
 def seq_transform(seq: list) -> str:
+    """
+    Transforms aminoacid abbreviation format from 3-letter into 1-letter.
+    Used in `check_and_procees_seq` function if sequence uses 3-letter abbreviation.
+    """
     seq_tr = ''
     for aa in seq:
         seq_tr += AA_TR_DICT[aa]
@@ -70,18 +78,17 @@ def seq_transform(seq: list) -> str:
     return seq_tr
 
 
-def check_seq(seq: Iterable, abbreviation: int = 1) -> bool:
-    """
-    Checks whether the string is protein.                                                                               
-    """
+def check_and_procees_seq(seq: str, abbreviation: int = 1) -> Tuple[bool, str]:
+    "Checks whether the string is valid protein sequence and transforms to 1-letter abbreviation if required"
+    not_empty = bool(seq)
     if abbreviation == 3:
         seq = decomposition(seq)
-        exit_code = bool(seq) and set(seq).issubset(set(AA_TR_DICT.keys()))
+        exit_code = not_empty and set(seq).issubset(set(AA_TR_DICT.keys()))
         if exit_code:
             seq = seq_transform(seq)
     elif abbreviation == 1:
         seq_set = set(seq.upper())
-        exit_code = seq_set.issubset(set(AA_TR_DICT.values()))
+        exit_code = not_empty and seq_set.issubset(set(AA_TR_DICT.values()))
         if exit_code:
             seq_content, uniprot_content = aa_content_check(seq).values(), AA_UNIPROT_CONTENT.values()
             seq_Mann_Whitney_U = Mann_Whitney_U(seq_content, uniprot_content) if len(seq_set) == 20 else True
@@ -292,7 +299,7 @@ def run_protein_analyzer_tool(*args, abbreviation: int = 1):
 
     result, corrupt_seqs = [], []
     for seq_index, seq in enumerate(seqs):
-        is_seq_valid, seq_alt = check_seq(seq, abbreviation)
+        is_seq_valid, seq_alt = check_and_procees_seq(seq, abbreviation)
         if is_seq_valid:
             result.append(OPERATIONS[operation](seq_alt))
         elif not is_seq_valid:
@@ -301,6 +308,6 @@ def run_protein_analyzer_tool(*args, abbreviation: int = 1):
     print_result(result, corrupt_seqs)
 
     res_len, cor_seq_len = len(result), len(corrupt_seqs)
-    result = result[0] if res_len >= 1 else result
-    corrupt_seqs = corrupt_seqs[0] if cor_seq_len >= 1 else corrupt_seqs
+    result = result[0] if res_len == 1 else result
+    corrupt_seqs = corrupt_seqs[0] if cor_seq_len == 1 else corrupt_seqs
     return result, corrupt_seqs
